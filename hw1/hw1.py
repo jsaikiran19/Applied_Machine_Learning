@@ -452,8 +452,10 @@ def distance(a, b):
 def get_nearest_neighbor_predictions(train_data,targets,test_example,k=3):
     heap = []
     for i in range(len(train_data)):
-        heapq.heappush(heap, (distance(train_data[i], test_example),i))
-    return [targets[heapq.heappop(heap)[1]] for i in range(k)]
+        heapq.heappush(heap, (-distance(train_data[i], test_example),i))
+    for i in range(len(train_data)-k):
+        heapq.heappop(heap)                    #Removing farthest points until k points are left in the heap 
+    return list(map(lambda x:targets[x[1]],heap))
 
 
 # In[55]:
@@ -490,8 +492,7 @@ precision_score(y_test,preds,average='macro')
 # In[59]:
 
 
-#Time complexity with a brute force search would be O(n*d*k), but using a heap it would be O(n*d*log(k)) which is smaller 
-# than the first one.
+#Time complexity using a heap would be O(n*d) +O((n-k)*log(k)) 
 # 'n' is number of examples
 # 'd' is number of dimensions
 # 'k' is number of neighbors
