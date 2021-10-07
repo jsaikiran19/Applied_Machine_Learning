@@ -446,8 +446,8 @@ preds.to_csv('test_preds.csv',index=False)
 # 
 # Now, lets assume C = {1,5}
 # 
-# P(A|C) = 1/3
-# P(B|C) = 1/2
+# P(A|C) = 1/3  P(B|C) = 1/2
+# 
 # P(A^B|C) = 0
 # 
 # P(A^B|C) < P(A|C) * P(B|C)
@@ -461,7 +461,7 @@ preds.to_csv('test_preds.csv',index=False)
 # If we assume that X is boolean vector here, then X can have 2^n possible values, where n is the the number of features.
 # So, the number of parameters will approximately be 2^n.
 # 
-# If the training size is too small, Naive Bayes would perform better because it does not assume any dependence between the features and it can easily compute the probabilities, and with a full bayesian model it would be very difficult to train the model because it is hard to derive a correlation between features with small amounts of data. 
+# If the training size is too small, Naive Bayes would perform better because it does not assume any dependence between the features and it can easily compute the probabilities, and with a full bayesian model it would easily overfit the train data given that the data we have is less. 
 
 # In[ ]:
 
