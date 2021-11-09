@@ -295,29 +295,6 @@ X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.3,random_state=
 # In[30]:
 
 
-def gp_mean_variances(X_train,y_train,X_test,s,h):
-    n = X_train.shape[0]
-    K = RBF(X_train,X_train,s,h)
-    I = np.identity(n)
-    sigma2 = 0.01*np.std(y_train)
-    L = (K+sigma2*I)
-    inv_L = np.linalg.inv(L)
-    alpha = inv_L @ y_train
-    k_ = RBF(X_test,X_train,s,h)
-    mean = k_ @ alpha
-    var = RBF(X_test,X_test,s,h) - k_@inv_L@RBF(X_train,X_test,s,h)
-    return mean, var
-
-
-# In[31]:
-
-
-means,varss = gp_mean_variances(X_train.values,y_train.values,X_test.values,np.std(y_train),np.linalg.norm(np.std(X_train)))
-
-
-# In[32]:
-
-
 #Referred the following links
 #https://towardsdatascience.com/gaussian-process-regression-from-first-principles-833f4aa5f842
 #https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/gaussian_process/_gpr.py
@@ -397,7 +374,24 @@ class GaussianRegressor(BaseEstimator):
 # Tried fitting it using scipy to minimize log likelihood but it was taking a lot of time, so just looped through the possible
 # values of s and h to find the optimal params.
 
-# In[33]:
+# In[31]:
+
+
+def gp_mean_variances(X_train,y_train,X_test,s,h):
+    n = X_train.shape[0]
+    K = RBF(X_train,X_train,s,h)
+    I = np.identity(n)
+    sigma2 = np.eye(n)*1e-10
+    L = (K+sigma2*I)
+    inv_L = np.linalg.inv(L)
+    alpha = inv_L @ y_train
+    k_ = RBF(X_test,X_train,s,h)
+    mean = k_ @ alpha
+    var = RBF(X_test,X_test,s,h) - k_@inv_L@RBF(X_train,X_test,s,h)
+    return mean, var
+
+
+# In[32]:
 
 
 # def def hyper_parameter_search(X_train,y_train,h,s):
@@ -406,7 +400,7 @@ class GaussianRegressor(BaseEstimator):
 #     gp.fit(X_train,y_train)    
 
 
-# In[34]:
+# In[33]:
 
 
 from sklearn.model_selection import GridSearchCV
@@ -416,11 +410,11 @@ def log_likelihood(X_train,y_train,theta):
         h = theta[1]
         n = X_train.shape[0]
         I = np.identity(n)
-        sigma2 = 1e-10*np.std(y_train)
+        sigma2 = np.eye(n)*1e-10
         K = np.linalg.cholesky(RBF(X_train,X_train,s,h) + sigma2*I)
         inv_K = np.linalg.inv(K)
-        n_log_likelihood =  -n/2*np.log(2*math.pi) - 1/2*y_train.T @ inv_K @ y_train - 1/2*np.log(np.linalg.det(K))
-        return n_log_likelihood
+        log_likelihood =  -n/2*np.log(2*math.pi) - 1/2*y_train.T @ inv_K @ y_train - 1/2*np.log(np.linalg.det(K))
+        return log_likelihood
 
 def hyper_parameter_search(X_train,y_train,h,s):
     H,S = np.logspace(-1,1,10)*np.linalg.norm(np.std(X_train)), np.logspace(-1,1,10)*np.std(y_train)
@@ -431,10 +425,16 @@ def hyper_parameter_search(X_train,y_train,h,s):
     return max(res,key=lambda x:x[2])
 
 
+# In[34]:
+
+
+tuned_s, tuned_h, max_loglikelihood = hyper_parameter_search(X_train.values,y_train.values,1,1)
+
+
 # In[35]:
 
 
-tuned_s, tuned_h, minimal_loglikelihood = hyper_parameter_search(X_train.values,y_train.values,1,1)
+tuned_s, tuned_h, max_loglikelihood
 
 
 # In[36]:
@@ -446,7 +446,20 @@ tuned_mean, tuned_vars = gp_mean_variances(X_train.values,y_train.values,X_test.
 # In[37]:
 
 
-minimal_loglikelihood
+actual_mean = np.mean(X_test.values,axis=1)
+actual_cov = np.cov(X_test)
+
+
+# In[38]:
+
+
+np.linalg.norm(actual_cov-tuned_vars)
+
+
+# In[39]:
+
+
+np.linalg.norm(actual_mean-tuned_mean)
 
 
 # In[ ]:
