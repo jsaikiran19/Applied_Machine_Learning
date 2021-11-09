@@ -58,91 +58,71 @@ def pdf(X,mean,sigma):
 # In[7]:
 
 
-pdf([0,0],0,1)
-
-
-# In[8]:
-
-
 def computeybar(X):
     p0 = pdf(X,0,1)
     p1 = pdf(X,2,1)
     return [1 if p1[i]>p0[i] else 0 for i in range(len(X))]
 
 
+# In[8]:
+
+
+#Referred the following link
+#https://medium.com/analytics-vidhya/bias-variance-trade-off-in-datascience-and-calculating-with-python-766158812c46
+#https://scikit-learn.org/stable/modules/generated/sklearn.kernel_ridge.KernelRidge.html
+
+
 # In[9]:
 
 
-y_bar = computeybar(X)
-pred = np.round(y_bar)
-errors = pred!=y
-(len(errors[errors==True])/len(pred))*100
+from sklearn.kernel_ridge import KernelRidge
+from sklearn.linear_model import Ridge
 
 
 # In[10]:
 
 
-i0 = y == 0
-i1 = y == 1
-plt.figure(figsize=(10,6))
-plt.scatter(X[i0, 0], X[i0, 1], c='r', marker='o')
-plt.scatter(X[i1, 0], X[i1, 1], c='b', marker='o')
-plt.scatter(X[errors, 0], X[errors, 1], c='k', s=100, alpha=0.2)
-plt.title("Misclassified points")
-plt.show()
-
-
-# In[11]:
-
-
-from sklearn.linear_model import Ridge
-
-
-# In[12]:
-
-
 def computehbar(X_test,alpha,n):
     h = [0 for i in range(len(X_test))]
     for i in range(n):
-        X,y = toy_data(1000)
-        r = Ridge(alpha=alpha)
+        X,y = toy_data(500)
+        r = KernelRidge(alpha=alpha,kernel='rbf')
         r.fit(X,y)
         h.append(r.predict(X_test))
     
     return sum(h)/n
 
 
-# In[13]:
+# In[11]:
 
 
 def computevariance(X_test,alpha,hbar, n):
-    var = np.zeros(len(X_test))
+    var = []
     for i in range(n):
-        X,y = toy_data(1000)
-        r = Ridge(alpha=alpha)
+        X,y = toy_data(500)
+        r = KernelRidge(alpha=alpha,kernel='rbf')
         r.fit(X,y)
         pred = r.predict(X_test)
-        var+=(pred-hbar)**2
+        var.append((pred-hbar)**2)
     return np.mean(var)/n
 
 
-# In[14]:
+# In[12]:
 
 
 def biasvariancedemo(n):
-    alphas = np.arange(-6, 0+0.5, 0.5)
+    alphas = np.arange(-6, 0.5, 0.5)
     biass=[]
     noiss = []
     varss = []
     bvn = []
     t_error = []
     for alpha in alphas:
-#         alpha = 2**alpha
         s = 0
-        X_test,y_test = toy_data(10000)
+        X_test,y_test = toy_data(500)
         for j in range(n):
-            X,y = toy_data(10)
-            r = Ridge(alpha=alpha)
+            X,y = toy_data(50)
+            r = KernelRidge(alpha=alpha,kernel='rbf')
             r.fit(X,y)
             pred=r.predict(X)
             s+=np.mean((pred-y)**2)
@@ -163,19 +143,18 @@ def biasvariancedemo(n):
     return biass, varss,noiss,bvn,t_error
 
 
-# In[15]:
+# In[13]:
 
 
-bias,var,noise,bvn,t_error = biasvariancedemo(100)
+bias,var,noise,bvn,t_error = biasvariancedemo(25)
 
 
-# In[16]:
+# In[14]:
 
 
 # plot results
 alphas = np.arange(-6, 0.5, 0.5)
 n_alphas = len(alphas)
-plt.figure(figsize=(10,6))
 plt.plot(bias[:n_alphas],c='r',linestyle='-',linewidth=2)
 plt.plot(var[:n_alphas],c='k', linestyle='-',linewidth=2)
 plt.plot(noise[:n_alphas],c='g', linestyle='-',linewidth=2)
@@ -187,7 +166,7 @@ plt.xticks([i for i in range(n_alphas)],alphas);
 
 # # 2 -  SVM Classifier
 
-# In[17]:
+# In[15]:
 
 
 data = []
@@ -198,37 +177,37 @@ with open('hw3_data2.txt') as f:
         data.append(line)
 
 
-# In[18]:
+# In[16]:
 
 
 df = pd.DataFrame(data,columns=['class','x1','x2'])
 
 
-# In[19]:
+# In[17]:
 
 
 df['x1'],df['x2'] = df.x1.astype(float), df.x2.astype(float)
 
 
-# In[20]:
+# In[18]:
 
 
 df['class'] = np.where(df['class']=='+',1,-1)
 
 
-# In[21]:
+# In[19]:
 
 
 df.head(5)
 
 
-# In[22]:
+# In[20]:
 
 
 X,y = df.drop('class',axis=1),df['class']
 
 
-# In[23]:
+# In[21]:
 
 
 X_train,X_test,y_train,y_test = train_test_split(X.values,y.values,random_state=42,test_size=0.3)
@@ -236,15 +215,17 @@ X_train,X_test,y_train,y_test = train_test_split(X.values,y.values,random_state=
 
 # SVC works better for this data because the data is not linearly separable here, and SVC uses a kernel which would be able to classify non linear data.
 
-# In[24]:
+# In[22]:
 
 
 from sklearn.svm import SVC
 
 
-# In[25]:
+# In[23]:
 
 
+#Referred the following link
+#https://stackoverflow.com/questions/26962159/how-to-use-a-custom-svm-kernel
 def rbf_kernel(a,b):
     return np.exp(-np.sum((a-b)**2))
 
@@ -264,13 +245,13 @@ acc = accuracy_score(y,svc.predict(mat))
 print(acc)
 
 
-# In[26]:
+# In[24]:
 
 
 plt.scatter(X.values[:, 0], X.values[:, 1], c=y)
 
 
-# In[27]:
+# In[25]:
 
 
 #Plotting predicted values
@@ -279,13 +260,13 @@ plt.scatter(X.values[:,0], X.values[:,1], c=svc.predict(mat))
 
 # # 3 - Gaussian Process
 
-# In[28]:
+# In[26]:
 
 
 df = pd.read_excel('Concrete_Data.xls')
 
 
-# In[29]:
+# In[27]:
 
 
 def RBF(X1,X2,s,h):
@@ -298,20 +279,20 @@ def RBF(X1,X2,s,h):
     return K
 
 
-# In[30]:
+# In[28]:
 
 
 label = df.columns[-1]
 X,y = df.drop(label,axis=1), df[label]
 
 
-# In[31]:
+# In[29]:
 
 
 X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.3,random_state=42)
 
 
-# In[32]:
+# In[30]:
 
 
 def gp_mean_variances(X_train,y_train,X_test,s,h):
@@ -328,18 +309,19 @@ def gp_mean_variances(X_train,y_train,X_test,s,h):
     return mean, var
 
 
-# In[33]:
+# In[31]:
 
 
 means,varss = gp_mean_variances(X_train.values,y_train.values,X_test.values,np.std(y_train),np.linalg.norm(np.std(X_train)))
 
 
-# In[34]:
+# In[32]:
 
 
 #Referred the following links
 #https://towardsdatascience.com/gaussian-process-regression-from-first-principles-833f4aa5f842
 #https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/gaussian_process/_gpr.py
+#https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.brute.html
 from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from sklearn.utils.multiclass import unique_labels
@@ -386,7 +368,7 @@ class GaussianRegressor(BaseEstimator):
         for i in range(10):
             params.append((s[i],h[i]))
         try:
-            res = minimize(self.log_likelihood,(s[0],h[0]),method="L-BFGS-B",options={'maxfun':1,'maxiter':1,'maxls':1})
+            res = brute(self.log_likelihood,(slice(s[0],s[-1]),slice(h[0],h[-1])))
         except:
             print(res)
             
@@ -412,7 +394,19 @@ class GaussianRegressor(BaseEstimator):
         return means
 
 
-# In[35]:
+# Tried fitting it using scipy to minimize log likelihood but it was taking a lot of time, so just looped through the possible
+# values of s and h to find the optimal params.
+
+# In[33]:
+
+
+# def def hyper_parameter_search(X_train,y_train,h,s):
+#     H,S = np.logspace(-1,1,10)*np.linalg.norm(np.std(X_train)), np.logspace(-1,1,10)*np.std(y_train)
+#    GaussianRegressor GaussianRegressor(S,H)
+#     gp.fit(X_train,y_train)    
+
+
+# In[34]:
 
 
 from sklearn.model_selection import GridSearchCV
@@ -437,20 +431,26 @@ def hyper_parameter_search(X_train,y_train,h,s):
     return max(res,key=lambda x:x[2])
 
 
-# In[36]:
+# In[35]:
 
 
 tuned_s, tuned_h, minimal_loglikelihood = hyper_parameter_search(X_train.values,y_train.values,1,1)
 
 
-# In[37]:
+# In[36]:
 
 
 tuned_mean, tuned_vars = gp_mean_variances(X_train.values,y_train.values,X_test.values,tuned_s,tuned_h)
 
 
-# In[38]:
+# In[37]:
 
 
 minimal_loglikelihood
+
+
+# In[ ]:
+
+
+
 
