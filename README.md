@@ -4,6 +4,6 @@
 
 ## Assignment-2 KMeans, Gradient Descent, & Naive Bayes Classifier
 
-## Assignment-3 Bias Variance Decomposition, SVM, & Gaussian Process Regressor
+## Assignment-3 Bias Variance Decomposition, SVM, & Gaussian Process
 
 ## Assignment-4 Decision Tree Classifier, Adaboost, & Bagging
